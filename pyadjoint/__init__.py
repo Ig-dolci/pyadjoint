@@ -7,7 +7,7 @@ __license__ = 'LGPL-3'
 __maintainer__ = 'Sebastian Kenji Mitusch'
 __email__ = 'sebastkm@math.uio.no'
 
-from .block import Block
+from .block import Block, reverse_over_forward
 from .tape import (Tape,
                    set_working_tape, get_working_tape, no_annotations,
                    annotate_tape, stop_annotating, pause_annotation, continue_annotation)

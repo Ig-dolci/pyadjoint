@@ -1,5 +1,17 @@
 from .tape import no_annotations
 from html import escape
+import contextlib
+
+
+_reverse_over_forward = 0
+
+
+@contextlib.contextmanager
+def reverse_over_forward():
+    global _reverse_over_forward
+    _reverse_over_forward += 1
+    yield
+    _reverse_over_forward -= 1
 
 
 class Block(object):
@@ -72,11 +84,11 @@ class Block(object):
             obj (:class:`BlockVariable`): The object to be added.
 
         """
-        if len(self._outputs) == self._n_outputs:
+        if _reverse_over_forward > 0 and len(self._outputs) >= self._n_outputs:
             raise RuntimeError("Unexpected output")
         obj.will_add_as_output()
         self._outputs.append(obj)
-        if len(self._outputs) == self._n_outputs:
+        if _reverse_over_forward > 0 and len(self._outputs) == self._n_outputs:
             for block_variable in self.get_dependencies():
                 if block_variable.tlm_value is not None:
                     self.solve_tlm()
