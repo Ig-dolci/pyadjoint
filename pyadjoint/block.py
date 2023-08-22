@@ -15,9 +15,10 @@ class Block(object):
     __slots__ = ['_dependencies', '_outputs', 'block_helper']
     pop_kwargs_keys = []
 
-    def __init__(self, ad_block_tag=None):
+    def __init__(self, ad_block_tag=None, *, n_outputs=1):
         self._dependencies = []
         self._outputs = []
+        self._n_outputs = n_outputs
         self.block_helper = None
         self.tag = ad_block_tag
 
@@ -71,8 +72,15 @@ class Block(object):
             obj (:class:`BlockVariable`): The object to be added.
 
         """
+        if len(self._outputs) == self._n_outputs:
+            raise RuntimeError("Unexpected output")
         obj.will_add_as_output()
         self._outputs.append(obj)
+        if len(self._outputs) == self._n_outputs:
+            for block_variable in self.get_dependencies():
+                if block_variable.tlm_value is not None:
+                    self.solve_tlm()
+                    break
 
     def get_outputs(self):
         """Returns the list of block outputs.
@@ -254,6 +262,14 @@ class Block(object):
 
         """
         raise NotImplementedError("evaluate_tlm_component is not implemented for Block-type: {}".format(type(self)))
+
+    def solve_tlm(self):
+        """This method should be overridden.
+
+        Perform a tangent-linear operation associated with this block.
+        """
+
+        raise NotImplementedError
 
     @no_annotations
     def evaluate_hessian(self, markings=False):
